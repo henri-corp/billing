@@ -1,0 +1,329 @@
+<!doctype html>
+<html ng-app="billingApp">
+<head>
+    <title>billing System.</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
+    <style>
+        html, body {
+            padding: 0px;
+            margin: 0px;
+            font-family: "Open Sans",Arial;
+            font-size: 14px;
+        }
+        .table{
+          font-weight: 100;
+        }
+
+        .page {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: space-between;
+        }
+
+        .page > .top {
+
+        }
+
+        .page > .content {
+            flex: 10 1;
+            justify-content: flex-start;
+
+        }
+
+        .page > .bottom {
+        }
+        @media screen{
+          .page{
+              display:none;
+          }
+
+          .table, tr,th, td{
+                        border: 1px solid black;
+          }
+        }
+
+        @media print {
+            form {
+                display: none;
+            }
+        }
+        .table, tr,th, td{
+          border-collapse:collapse;
+        }
+        .table{
+          width: 100%;
+        }
+        thead th{
+          background-color: #CCC;
+          padding-top: 5px;
+          padding-bottom: 5px;
+        }
+        tbody td{
+          padding-top: 2px;
+        }
+        tfoot #totalHT th{
+          padding: 10px 0px 5px;
+
+        }
+        .contacts{
+          margin-top: 100px;
+          display: flex;
+          width: 100%;
+          justify-content: space-between;
+          margin-bottom: 50px;
+
+        }
+
+.payments{
+  margin-top: 50px;
+}
+/*        tbody tr:nth-child(even) {background: #FFF}*/
+        form {
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+    <script>
+
+    </script>
+</head>
+<body ng-controller="billingController">
+<form>
+    date: <input type="date" ng-model="today"/><br/>
+    bill number : <input name="billNumber" id="billNumber" class="binding" ng-model="billNumber"
+                         type="number"/>
+                         <br/>
+destination : <textarea ng-model="contactTo" id="contactTo"></textarea>
+currency: <select ng-model="currency"id="currency">
+  <option value="€">Euro</option>
+  <option value="$">Dollars</option>
+  </select><br/>
+        <table class="table">
+            <tr>
+              <th></th>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Qté</th>
+                <th>Prix Unitaire</th>
+                <th>TVA</th>
+                <th>Montant</th>
+                <th></th>
+            </tr>
+            <tr ng-repeat="(index,value) in prestations">
+                <td>{{index}}</td>
+                <td>{{value.description}}</td>
+                <td>{{value.date|date:"dd-MM-yyyy"}}</td>
+                <td>{{value.qty}}</td>
+                <td>{{value.unit}}</td>
+                <td>{{(value.vat+0.00)*100}}%</td>
+                <td>{{(value.unit*value.qty)+(value.unit*value.qty)*value.vat}}</td>
+                <td><button ng-click="remove(index)">remove</button>
+                  <button ng-click="edit(index)">edit</button>
+                  <button ng-if="index>0" ng-click="up(index)">up</button>
+                  <button ng-if="index<prestations.length-1" ng-click="down(index)">down</button>
+                  </td>
+            </tr>
+            <tr>
+              <td></td>
+                <td><input ng-model="new.description"/></td>
+                <td><input ng-model="new.date" type="date"/></td>
+                <td><input ng-model="new.qty"/></td>
+                <td><input ng-model="new.unit"/></td>
+                <td><input ng-model="new.vat" value="0"/></td>
+                <td>{{(new.unit*new.qty)+(new.unit*new.qty)*new.vat}}</td>
+                <td><button ng-click="add()">add</button></td>
+
+            </tr>
+        </table>
+    </table>
+</form>
+<div class="page">
+    <div class="top">
+        <div style="font-size: 18px; font-weight: bolder; text-align:right;">Facture n° {{today|date:"yyyy-MM-"}}{{billNumber|zpad:4}}</div>
+<div style="text-align:right">Date de facturation : {{ today|date:"dd/MM/yyyy"}}</div>
+<div style="text-align:right">Échéance : dès réception de la facture.</div>
+
+    </div>
+    <div class="content">
+        <div class="contacts">
+        <div>
+          <b>Henri LARGET</b><br/>
+          1 rue des Alpins<br/>
+          74000 Annecy<br/>
+          France<br/>
+          <br/>
+          06 60 14 80 96<br/>
+          henri@larget.fr<br/>
+        </div>
+        <div style="white-space: pre;" ng-bind-html="contactTo|html"></div>
+
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+                <th style="width: 50%; text-align:left;">Description</th>
+                <th style="text-align:right;">Date</th>
+                <th style="text-align:right;">Qté</th>
+                <th style="text-align:right;">P.U.</th>
+                <th style="text-align:right;">TVA</th>
+                <th style="text-align:right;">Montant</th>
+            </tr>
+          </thead>
+
+            <tbody>
+            <tr ng-repeat="value in prestations">
+                <td style="text-align: left;">{{value.description}}</td>
+                <td style="text-align: right;">{{value.date|date:'dd/MM/yyyy'}}</td>
+                <td style="text-align: right;">{{value.qty}}</td>
+                <td style="text-align: right;">{{value.unit|number:2}} {{ currency }}</td>
+                <td style="text-align: right;">{{((value.vat+0.00)*100)|number:1}}%</td>
+                <td style="text-align: right;">{{((value.unit*value.qty)+(value.unit*value.qty)*value.vat)|number:2}}  {{ currency }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr id="totalHT" style="border-top: 2px solid black;font-size:13px;">
+                <td colspan="2"></td>
+                <th colspan="2" style="text-align: left;">Total (HT)</th>
+                <th colspan="2" style="text-align: right;">{{ prestations|totalHT|number:2 }} {{currency}}</th>
+            </tr>
+            <tr style="font-size:13px;">
+                <td colspan="2"></td>
+                <td colspan="2" >TVA 0.0%</td>
+                <td colspan="2" style="text-align: right;">{{ ((prestations|totalHT)*0.00)|number:2 }} {{currency}}</td>
+            </tr>
+            <tr style="font-size:18px;">
+                <td colspan="2"></td>
+                <th colspan="2"  style="text-align: left;border-top: 2px solid black;">Total (TTC)</th>
+                <th colspan="2" style="text-align: right;border-top: 2px solid black;">{{ ((prestations|totalHT)+0.00)|number:2 }} {{currency}}</th>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="payments">
+          <b>Moyens de paiement: 50% début prestation, 50% restant à la livraison.</b><br/>
+<br/><br/>
+<br/>    Banque: N26 Bank GmbH
+<br/>    SWIFT/BIC: NTSBDEB1XXX
+<br/>    IBAN: DE36 1001 1001 2626 9611 20
+
+<br/>    Conditions de paiement: 0 jours
+<br/>    Échéance: À la réception de la facture
+        </div>
+    </div>
+
+
+    <div class="bottom" style="text-align:center;">
+<i>TVA non applicable, art. 293 B du CGI.</i><br/>
+Henri LARGET<br/>
+1 Rue des Alpins 74000 Annecy<br/>
+Numéro de SIRET: 834 659 245 00015<br/>
+    </div>
+
+</div>
+
+<script>
+    var billingApp = angular.module('billingApp', ["filters"]);
+
+    // Define the `PhoneListController` controller on the `phonecatApp` module
+    billingApp.controller('billingController', function ($scope) {
+      $scope.new={};
+      $scope.today=new Date();
+      $scope.add=function(){
+        $scope.prestations.push($scope.new);
+        $scope.new ={};
+      }
+      $scope.edit=function(index){
+        var e = $scope.prestations.splice(index, 1);
+        $scope.new = e[0];
+      }
+      $scope.remove=function(index){
+        e = $scope.prestations.splice(index, 1);
+      }
+      $scope.up = function(index){
+        var e = $scope.prestations.splice(index, 1);
+        $scope.prestations.splice(index-1,0,e[0]);
+      }
+
+      $scope.down = function(index){
+        var e = $scope.prestations.splice(index, 1);
+        $scope.prestations.splice(index+1,0,e[0]);
+      }
+        $scope.save = function () {
+            if (localStorage) {
+                localStorage.setItem("billingNumber", $scope.billNumber);
+                localStorage.setItem("currency", $scope.currency);
+                localStorage.setItem("contactTo",$scope.contactTo);
+            }
+
+        };
+        $scope.load = function () {
+            if (localStorage) {
+$scope.billNumber = parseInt(localStorage.getItem("billingNumber"));
+$scope.currency = localStorage.getItem("currency");
+$scope.contactTo = localStorage.getItem("contactTo");
+document.getElementById("billNumber").value = $scope.billNumber;
+document.getElementById("currency").value = $scope.currency;
+document.getElementById("contactTo").value = $scope.contactTo;
+            }
+        }
+        $scope.prestations = [
+        {
+          "description":"Emission de facture",
+          "date":new Date(),
+          "qty":1,
+          "unit": 0,
+          "vat":0.0
+        }
+        ];
+        $scope.load();
+        $scope.$watch("billNumber", function () {
+            $scope.save();
+
+        });
+        $scope.$watch("currency", function () {
+            $scope.save();
+
+        });
+        $scope.$watch("contactTo", function(){
+          $scope.save();
+        });
+    });
+
+    angular.module('filters', []).filter('zpad', function () {
+        return function (input, n) {
+            input += "";
+            if (input === undefined)
+                input = ""
+            if (input.length >= n)
+                return input;
+
+            var zeros = "0".repeat(n);
+            return (zeros + input).slice(-1 * n)
+        };
+    }).filter('totalHT', function () {
+        return function (input) {
+            var e=0;
+
+            for(var i =0;i<input.length;i++){
+              e+=input[i].unit*input[i].qty;
+            }
+            return e;
+        };
+    }).filter('totalTTC', function () {
+        return function (input) {
+            var e=0;
+
+            for(var i =0;i<input.length;i++){
+              e+=input[i].unit*input[i].qty+(input[i].unit*input[i].qty*input[i].vat);
+            }
+            return e;
+        };
+    }).filter('html', function($sce) {
+    return function(val) {
+        return $sce.trustAsHtml(val);
+    };
+    });
+
+
+</script>
+</body>
+</html>
