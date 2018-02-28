@@ -1,0 +1,137 @@
+<!doctype html>
+<html ng-app="letterApp">
+<head>
+    <title>Letter</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet"/>
+    <link rel="stylesheet" href="style.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.8.6/showdown.min.js"></script>
+
+</head>
+<body ng-controller="letterController">
+<form>
+    content:
+    <textarea ng-model="content">
+
+    </textarea>
+
+
+    <button onclick="window.print()">print</button>
+</form>
+<div class="page">
+    <div class="top">
+        <div class="top-left">
+            <img style="height: 20mm;" src="logo-raw.svg"/>
+        </div>
+        <div class="top-right">
+        </div>
+    </div>
+    <div class="content">
+        <div class="markdown" ng-bind-html="content|parsedown"></div>
+</div>
+
+
+    <div class="bottom">
+        <i>TVA non applicable, art. 293 B du CGI.</i><br/>
+        Henri LARGET<br/>
+        1 Rue des Alpins 74000 Annecy<br/>
+        Numéro de SIRET: 834 659 245 00015<br/>
+    </div>
+
+</div>
+<script>
+    var billingApp = angular.module('letterApp', ["filters"]);
+
+    // Define the `PhoneListController` controller on the `phonecatApp` module
+    billingApp.controller('letterController', ['$scope', '$window', function ($scope, $window) {
+        $scope.new = {};
+        $scope.today = new Date();
+        $scope.add = function () {
+            $scope.prestations.push($scope.new);
+            $scope.new = {};
+        }
+        $scope.edit = function (index) {
+            var e = $scope.prestations.splice(index, 1);
+            $scope.new = e[0];
+        }
+        $scope.remove = function (index) {
+            e = $scope.prestations.splice(index, 1);
+        }
+        $scope.up = function (index) {
+            var e = $scope.prestations.splice(index, 1);
+            $scope.prestations.splice(index - 1, 0, e[0]);
+        }
+
+        $scope.down = function (index) {
+            var e = $scope.prestations.splice(index, 1);
+            $scope.prestations.splice(index + 1, 0, e[0]);
+        }
+
+        $scope.backup = function () {
+            var result = $window.prompt("Save this line or change it", $scope.export());
+            $scope.import(result);
+        }
+        $scope.export = function () {
+            var e = JSON.stringify({
+                "prestations": $scope.prestations,
+                "billNumber": $scope.billNumber,
+                "currency": $scope.currency,
+                "contactTo": $scope.contactTo,
+                "today": $scope.today
+            });
+            return btoa(e);
+        }
+        $scope.import = function (input) {
+            var e = JSON.parse(atob(input));
+            $scope.prestations = e.prestations;
+            $scope.billNumber = e.billNumber;
+            $scope.currency = e.currency;
+            $scope.contactTo = e.contactTo;
+            $scope.today = e.today;
+
+        }
+        $scope.save = function () {
+            if (localStorage) {
+                localStorage.setItem("billingNumber", $scope.billNumber);
+                localStorage.setItem("currency", $scope.currency);
+                localStorage.setItem("contactTo", $scope.contactTo);
+            }
+
+        };
+        $scope.load = function () {
+            if (localStorage) {
+                $scope.billNumber = parseInt(localStorage.getItem("billingNumber"));
+                $scope.currency = localStorage.getItem("currency");
+                $scope.contactTo = localStorage.getItem("contactTo");
+                document.getElementById("billNumber").value = $scope.billNumber;
+                document.getElementById("currency").value = $scope.currency;
+                document.getElementById("contactTo").value = $scope.contactTo;
+            }
+        }
+        $scope.prestations = [
+            {
+                "description": "Emission de facture",
+                "date": new Date(),
+                "qty": 1,
+                "unit": 0,
+                "vat": 0.0
+            }
+        ];
+
+    }]);
+
+    angular.module('filters', []).filter('html',function ($sce) {
+        return function (val) {
+            return $sce.trustAsHtml(val);
+        };
+    }).filter('parsedown', function ($sce) {
+        return function (val) {
+            var converter = new showdown.Converter();
+            return $sce.trustAsHtml(converter.makeHtml(val));
+        };
+    });
+
+
+</script>
+</body>
+</html>
